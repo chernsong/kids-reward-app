@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>兄弟基地 | 绝密任务中心</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
+    
+    <style>
+        body {
+            background-color: #202020;
+            font-family: 'Press Start 2P', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: white;
+            /* 增加一点背景网格，更有科技感 */
+            background-image: radial-gradient(#333 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .game-container {
+            width: 95%;
+            max-width: 500px;
+            background-color: #fff;
+            color: #000;
+            padding: 15px;
+            border: 4px solid #000;
+            box-shadow: 10px 10px 0px #000;
+            position: relative;
+        }
+        
+        /* 登录界面 */
+        #loginScreen { text-align: center; padding: 20px; }
+        .hero-select-btn { 
+            width: 100%; 
+            margin-bottom: 25px; 
+            height: 100px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: left;
+            padding: 0 20px;
+        }
+        .hero-icon { font-size: 40px; margin-right: 20px; }
+        .hero-info { display: flex; flex-direction: column; }
+        .hero-title { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+        .hero-sub { font-size: 10px; opacity: 0.8; }
+
+        /* 游戏主界面 */
+        #gameScreen { display: none; }
+
+        .top-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 15px; 
+            background: #000; 
+            color: #fff; 
+            padding: 10px; 
+            font-size: 12px;
+        }
+        
+        /* 宠物/机甲展示 */
+        .mecha-stage {
+            background-color: #209cee; /* 哥哥默认蓝 */
+            padding: 20px;
+            text-align: center;
+            border: 4px solid #000;
+            margin-bottom: 15px;
+            transition: background-color 0.3s;
+        }
+        .avatar-box { 
+            font-size: 80px; 
+            animation: hover 3s infinite ease-in-out;
+            filter: drop-shadow(5px 5px 0px rgba(0,0,0,0.3));
+        }
+
+        /* 任务网格 */
+        .mission-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .mission-btn {
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            border-width: 4px;
+        }
+        
+        @keyframes hover { 
+            0%, 100% { transform: translateY(0); } 
+            50% { transform: translateY(-15px); } 
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    
+    <div id="loginScreen">
+        <h3 style="margin-bottom:30px; text-transform: uppercase;">⚔️ 选择作战单位</h3>
+        
+        <button class="nes-btn is-primary hero-select-btn" onclick="login('bigBoy')">
+            <span class="hero-icon">🤖</span>
+            <div class="hero-info">
+                <span class="hero-title">机甲指挥官</span>
+                <span class="hero-sub">代号：哥哥 (Lv.9)</span>
+            </div>
+        </button>
+        
+        <button class="nes-btn is-error hero-select-btn" onclick="login('smallBoy')">
+            <span class="hero-icon">🦖</span>
+            <div class="hero-info">
+                <span class="hero-title">兽王先锋</span>
+                <span class="hero-sub">代号：弟弟 (Lv.4)</span>
+            </div>
+        </button>
+
+        <p style="font-size:10px; color:#888; margin-top:30px;">系统状态: 自动存档已激活</p>
+    </div>
+
+    <div id="gameScreen">
+        <div class="top-bar">
+            <span style="cursor:pointer" onclick="location.reload()">◀ 切换基地</span>
+            <span id="baseName">基地</span>
+        </div>
+
+        <div class="mecha-stage" id="stageBg">
+            <div id="petAvatar" class="avatar-box">🤖</div>
+            <div style="margin-top:10px; font-weight:bold;">
+                Lv.<span id="levelNum">1</span> <span id="petName">原型机</span>
+            </div>
+            <div style="margin-top:15px; background:#000; padding:2px; border-radius:4px;">
+                <div id="xpBarFill" style="width:0%; height:10px; background:#fff; transition: width 0.5s;"></div>
+            </div>
+            <div style="font-size:10px; margin-top:5px;">能量充能中...</div>
+        </div>
+
+        <div id="missionList" class="mission-grid"></div>
+    </div>
+
+</div>
+
+<script>
+    // === 男孩专属配置 ===
+    const CONFIG = {
+        'bigBoy': {
+            title: "机甲指挥官",
+            themeColor: "#209cee", // 科技蓝
+            btnType: "is-primary",
+            // 9岁男孩：强调智力、自律和力量
+            tasks: [
+                { id: 'hw', icon: '⚡', text: '情报解码', sub:'(做功课)', xp: 60 },
+                { id: 'read', icon: '🛰️', text: '战术研究', sub:'(阅读)', xp: 30 },
+                { id: 'clean', icon: '🛡️', text: '基地维护', sub:'(整理)', xp: 40 },
+                { id: 'sport', icon: '🏋️', text: '体能特训', sub:'(运动)', xp: 50 }
+            ]
+        },
+        'smallBoy': {
+            title: "兽王先锋",
+            themeColor: "#e76e55", // 战斗红
+            btnType: "is-error",
+            // 4岁男孩：强调具体动作、卫生和听话
+            tasks: [
+                { id: 'teeth', icon: '🦷', text: '机体除锈', sub:'(刷牙)', xp: 50 }, 
+                { id: 'toy', icon: '💣', text: '战场清理', sub:'(收玩具)', xp: 50 },
+                { id: 'eat', icon: '🍖', text: '补充燃料', sub:'(吃饭)', xp: 40 },
+                { id: 'sleep', icon: '💤', text: '系统休眠', sub:'(睡觉)', xp: 60 }
+            ]
+        }
+    };
+
+    // 进化路线：更酷炫，含机甲和龙
+    const EVOLUTION_PATH = [
+        {icon:"🥚", name:"休眠舱"},
+        {icon:"🐣", name:"新兵兽"},
+        {icon:"🦖", name:"暴龙兽"},
+        {icon:"🦍", name:"金刚战神"},
+        {icon:"🤖", name:"重装机甲"},
+        {icon:"🐲", name:"究极神龙"},
+        {icon:"👑", name:"宇宙霸主"}
+    ];
+
+    let currentUser = null;
+    let userData = {};
+
+    // === 登录 ===
+    function login(userId) {
+        currentUser = userId;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('gameScreen').style.display = 'block';
+        
+        const saved = localStorage.getItem('boys_base_' + userId);
+        userData = saved ? JSON.parse(saved) : { xp: 0, level: 1, evoIndex: 0 };
+
+        renderScreen();
+    }
+
+    // === 渲染 ===
+    function renderScreen() {
+        const cfg = CONFIG[currentUser];
+        
+        // 设置颜色主题
+        document.getElementById('stageBg').style.backgroundColor = cfg.themeColor;
+        document.getElementById('baseName').innerText = cfg.title + "控制台";
+
+        // 设置宠物状态
+        const evo = EVOLUTION_PATH[userData.evoIndex] || EVOLUTION_PATH[EVOLUTION_PATH.length-1];
+        document.getElementById('petAvatar').innerText = evo.icon;
+        document.getElementById('petName').innerText = evo.name;
+        document.getElementById('levelNum').innerText = userData.level;
+
+        // 计算进度条百分比
+        const maxXp = 100 + (userData.level * 50);
+        const pct = Math.min(100, (userData.xp / maxXp) * 100);
+        document.getElementById('xpBarFill').style.width = pct + "%";
+
+        // 生成任务按钮
+        const list = document.getElementById('missionList');
+        list.innerHTML = '';
+        cfg.tasks.forEach(task => {
+            list.innerHTML += `
+                <button class="nes-btn ${cfg.btnType} mission-btn" onclick="completeMission(${task.xp}, '${task.text}')">
+                    <span style="font-size:24px; margin-bottom:5px;">${task.icon}</span>
+                    <span>${task.text}</span>
+                    <span style="font-size:9px; opacity:0.7; margin-top:3px;">${task.sub}</span>
+                </button>
+            `;
+        });
+    }
+
+    // === 完成任务 ===
+    function completeMission(xp, text) {
+        userData.xp += xp;
+        const maxXp = 100 + (userData.level * 50);
+        
+        alert(`✅ 任务确认：[${text}] 完成！\n🔋 能量注入: +${xp}`);
+
+        // 升级逻辑
+        if (userData.xp >= maxXp) {
+            userData.level++;
+            userData.xp = 0;
+            
+            // 每3级进化
+            if (userData.level % 3 === 0 && userData.evoIndex < EVOLUTION_PATH.length - 1) {
+                userData.evoIndex++;
+                const newForm = EVOLUTION_PATH[userData.evoIndex];
+                alert(`🚨 警告！警告！\n生物信号改变... 进化为 [${newForm.name}]！`);
+            } else {
+                alert(`🆙 权限提升！当前等级: Lv.${userData.level}`);
+            }
+        }
+
+        localStorage.setItem('boys_base_' + currentUser, JSON.stringify(userData));
+        renderScreen();
+    }
+</script>
+
+</body>
+</html>

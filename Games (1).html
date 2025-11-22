@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Minecraft vs Chuggington | 自律挑战</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Fredoka+One&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet"/>
+    
+    <style>
+        /* === 全局设置 === */
+        body { margin: 0; padding: 0; overflow-x: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .hidden { display: none !important; }
+        .game-container { min-height: 100vh; padding: 15px; padding-bottom: 80px; box-sizing: border-box; }
+
+        /* === 1. 登录界面 (Login) === */
+        #loginScreen {
+            height: 100vh;
+            background: #111;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: 'VT323', monospace;
+        }
+        .login-title { color: #fff; font-size: 30px; margin-bottom: 40px; text-align: center; text-transform: uppercase; }
+        
+        .login-btn {
+            width: 85%; max-width: 320px; height: 100px; margin-bottom: 25px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; transition: transform 0.1s; position: relative;
+        }
+        .login-btn:active { transform: scale(0.95); }
+
+        /* MC 登录按钮 (草方块风格) */
+        .btn-mc-login {
+            background-color: #7a5836; /* 土色 */
+            border: 4px solid #000;
+            box-shadow: inset 0 10px 0 #5c9e43; /* 草皮 */
+            color: #fff; font-family: 'VT323', monospace;
+        }
+        
+        /* Chuggington 登录按钮 (火车头风格) */
+        .btn-chug-login {
+            background: #d92b2b; /* 威尔逊红 */
+            border: 5px solid #fff;
+            border-radius: 20px;
+            color: white; font-family: 'Fredoka One', cursive;
+            box-shadow: 0 5px 0 #9e1a1a;
+        }
+
+        /* === 2. 通用组件 === */
+        .top-bar {
+            position: sticky; top: 0; z-index: 100;
+            padding: 10px 15px; margin: -15px -15px 15px -15px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .back-btn { cursor: pointer; padding: 5px 10px; border-radius: 5px; background: rgba(0,0,0,0.3); color: white; font-size: 14px; }
+        
+        .grid-container {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+        }
+        .section-header { margin: 25px 0 10px 0; text-align: center; }
+
+        /* =========================================
+           🎨 主题 A: Minecraft (哥哥)
+           ========================================= */
+        .theme-mc {
+            background-color: #121212;
+            /* 模拟基岩/泥土纹理 */
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjM2EzYTNhIi8+CjxwYXRoIGQ9Ik0wIDBIMlYySDB6TTYgNkg4VjhINnoiIGZpbGw9IiM0ZTRlNGUiLz4KPC9zdmc+');
+            font-family: 'VT323', monospace; color: #ddd;
+        }
+        .theme-mc .top-bar { background: #333; border-bottom: 4px solid #000; box-shadow: 0 4px 0 rgba(0,0,0,0.5); }
+        .theme-mc .score-box { font-size: 40px; color: #55ff55; text-shadow: 2px 2px #000; }
+        .theme-mc .level-badge { color: #ffff55; }
+        
+        .theme-mc .section-header {
+            background: #555; color: #fff; border: 2px solid #000; padding: 5px;
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+
+        /* MC 物品栏按钮 */
+        .btn-mc {
+            background: #8b8b8b; /* 石头色 */
+            border: 3px solid;
+            border-color: #fff #555 #555 #fff; /* 经典3D边框 */
+            padding: 10px 2px; color: #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer; height: 90px;
+        }
+        .btn-mc:active { border-color: #555 #fff #fff #555; background: #777; }
+        
+        .btn-mc.negative { background: #522; color: #ffaaaa; border-color: #a55 #300 #300 #a55; }
+        .mc-icon { font-size: 32px; margin-bottom: 5px; filter: drop-shadow(2px 2px 0 #000); }
+
+        /* =========================================
+           🚂 主题 B: Chuggington (弟弟)
+           ========================================= */
+        .theme-chug {
+            background-color: #87CEEB; /* 天空蓝 */
+            /* 铁轨背景纹理 */
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 48px, rgba(255,255,255,0.5) 48px, rgba(255,255,255,0.5) 52px), repeating-linear-gradient(0deg, transparent, transparent 48px, rgba(255,255,255,0.3) 48px, rgba(255,255,255,0.3) 52px);
+            font-family: 'Fredoka One', cursive; color: #333;
+        }
+        .theme-chug .top-bar { background: #d92b2b; border-bottom: 5px dashed #fff; color: white; }
+        .theme-chug .score-box { font-size: 45px; color: #fff; -webkit-text-stroke: 2px #d92b2b; text-shadow: 2px 2px 0 #333; }
+        
+        .theme-chug .section-header {
+            background: #fff; color: #d92b2b; border-radius: 20px; display: inline-block; padding: 5px 20px;
+            border: 3px solid #d92b2b; box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+        }
+
+        /* Chuggington 车厢按钮 */
+        .btn-chug {
+            background: #fff;
+            border: 3px solid #2168ac; /* 铁轨蓝 */
+            border-radius: 15px;
+            box-shadow: 0 6px 0 #2168ac;
+            padding: 10px 2px; color: #2168ac;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 14px; cursor: pointer; height: 100px; transition: transform 0.1s;
+        }
+        .btn-chug:active { transform: translateY(6px); box-shadow: 0 0 0 #2168ac; }
+        
+        .btn-chug.negative { border-color: #d92b2b; color: #d92b2b; box-shadow: 0 6px 0 #d92b2b; background: #fff0f0; }
+        .btn-chug.negative:active { box-shadow: 0 0 0 #d92b2b; }
+
+        .chug-icon { font-size: 35px; margin-bottom: 5px; }
+
+        /* 动画类 */
+        .pop { animation: animate__rubberBand 0.5s; }
+        .shake { animation: animate__headShake 0.5s; }
+
+    </style>
+</head>
+<body>
+
+    <div id="loginScreen">
+        <div class="login-title">选择世界 / Choose World</div>
+        
+        <div class="login-btn btn-mc-login" onclick="enterGame('brother')">
+            <span style="font-size:30px; margin-right:15px;">⛏️</span>
+            <div>
+                <div>MINECRAFT MODE</div>
+                <div style="font-size:14px; opacity:0.8;">哥哥的世界 (Lv.9)</div>
+            </div>
+        </div>
+
+        <div class="login-btn btn-chug-login" onclick="enterGame('younger')">
+            <span style="font-size:30px; margin-right:15px;">🚂</span>
+            <div>
+                <div>CHUGGINGTON</div>
+                <div style="font-size:14px; opacity:0.9;">弟弟的火车站 (Lv.4)</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameApp" class="game-container hidden">
+        <div class="top-bar">
+            <div class="back-btn" onclick="location.reload()">◀ 退出</div>
+            <div style="text-align: center;">
+                <div id="scoreValue" class="score-box">0</div>
+                <div style="font-size:12px; opacity:0.8;">XP / 能量</div>
+            </div>
+            <div class="level-badge">Lv.<span id="levelValue">1</span></div>
+        </div>
+
+        <div class="section-header" id="goodHeader">✅ 获得资源</div>
+        <div class="grid-container" id="goodGrid"></div>
+
+        <div class="section-header" id="badHeader" style="margin-top:30px; color:#ff5555 !important; border-color:#ff5555 !important;">⚠️ 怪物袭击</div>
+        <div class="grid-container" id="badGrid"></div>
+    </div>
+
+<script>
+    // === 行为列表配置 ===
+    const TASKS_GOOD = [
+        { name: "早起床", icon: "🌅", score: 10 },
+        { name: "刷牙", icon: "🦷", score: 10 },
+        { name: "上学", icon: "🏫", score: 20 },
+        { name: "做家务", icon: "🧹", score: 15 },
+        { name: "收玩具", icon: "🧸", score: 15 },
+        { name: "做功课", icon: "📝", score: 25 },
+        { name: "帮助人", icon: "🤝", score: 20 },
+        { name: "自己吃饭", icon: "🥣", score: 10 },
+        { name: "冲凉", icon: "🚿", score: 10 },
+        { name: "早睡觉", icon: "💤", score: 20 },
+        { name: "收拾书包", icon: "🎒", score: 10 },
+        { name: "复习功课", icon: "📖", score: 20 },
+        { name: "祷告", icon: "🙏", score: 15 },
+        { name: "运动", icon: "⚽", score: 15 }
+    ];
+
+    const TASKS_BAD = [
+        { name: "打架", icon: "⚔️", score: -30 },
+        { name: "争吵", icon: "🗣️", score: -15 },
+        { name: "乱走动", icon: "🏃", score: -10 },
+        { name: "挑食", icon: "🥦", score: -10 },
+        { name: "捉弄人", icon: "🤪", score: -20 },
+        { name: "大声喧哗", icon: "📢", score: -10 },
+        { name: "讲骗话", icon: "🤥", score: -50 },
+        { name: "插嘴", icon: "🤫", score: -10 },
+        { name: "负面想法", icon: "☁️", score: -10 }
+    ];
+
+    let currentUser = '';
+    let score = 0;
+    let level = 1;
+
+    function enterGame(user) {
+        currentUser = user;
+        
+        // 1. 读取存档
+        const savedScore = localStorage.getItem('score_' + user);
+        score = savedScore ? parseInt(savedScore) : 0;
+        updateLevel();
+
+        // 2. 切换界面
+        document.getElementById('loginScreen').classList.add('hidden');
+        const app = document.getElementById('gameApp');
+        app.classList.remove('hidden');
+
+        // 3. 应用皮肤
+        const goodGrid = document.getElementById('goodGrid');
+        const badGrid = document.getElementById('badGrid');
+        
+        if(user === 'brother') {
+            // Minecraft 模式
+            document.body.className = 'theme-mc';
+            document.getElementById('goodHeader').innerText = "⚒️ 资源开采 (Crafting)";
+            document.getElementById('badHeader').innerText = "🧟 受到伤害 (Damage)";
+            renderGrid(goodGrid, TASKS_GOOD, 'btn-mc', 'mc-icon');
+            renderGrid(badGrid, TASKS_BAD, 'btn-mc negative', 'mc-icon');
+        } else {
+            // Chuggington 模式
+            document.body.className = 'theme-chug';
+            document.getElementById('goodHeader').innerText = "🚂 动力加速 (Chugga!)";
+            document.getElementById('badHeader').innerText = "🛑 紧急刹车 (Stop)";
+            renderGrid(goodGrid, TASKS_GOOD, 'btn-chug', 'chug-icon');
+            renderGrid(badGrid, TASKS_BAD, 'btn-chug negative', 'chug-icon');
+        }
+
+        updateDisplay();
+    }
+
+    function renderGrid(container, tasks, btnClass, iconClass) {
+        container.innerHTML = tasks.map(t => `
+            <div class="${btnClass}" onclick="changeScore(${t.score}, this)">
+                <div class="${iconClass}">${t.icon}</div>
+                <div>${t.name}</div>
+                <div style="font-size:10px; opacity:0.7">${t.score > 0 ? '+' : ''}${t.score}</div>
+            </div>
+        `).join('');
+    }
+
+    function changeScore(amount, btnElement) {
+        score += amount;
+        updateLevel();
+        
+        // 保存
+        localStorage.setItem('score_' + currentUser, score);
+        
+        // 更新UI
+        updateDisplay();
+
+        // 动画反馈
+        const scoreBox = document.getElementById('scoreValue');
+        scoreBox.classList.remove('pop', 'shake');
+        void scoreBox.offsetWidth; // 重置动画
+        
+        if (amount > 0) {
+            scoreBox.classList.add('pop');
+        } else {
+            scoreBox.classList.add('shake');
+            if(navigator.vibrate) navigator.vibrate([100, 50, 100]); // 震动
+        }
+    }
+
+    function updateLevel() {
+        // 每 200 分升一级
+        level = Math.max(1, Math.floor(score / 200) + 1);
+    }
+
+    function updateDisplay() {
+        document.getElementById('scoreValue').innerText = score;
+        document.getElementById('levelValue').innerText = level;
+    }
+</script>
+</body>
+</html>
